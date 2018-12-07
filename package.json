@@ -1,0 +1,23 @@
+{
+  "name": "nodejs-app",
+  "version": "1.0.0",
+  "description": "A simple NodeJS Application",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergeypogorelov/nodejs-app.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "NodeJS"
+  ],
+  "author": "Sergey Pogorelov <sergey.pogorelov.93@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sergeypogorelov/nodejs-app/issues"
+  },
+  "homepage": "https://github.com/sergeypogorelov/nodejs-app#readme"
+}

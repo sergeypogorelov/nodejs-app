@@ -1,0 +1,6 @@
+# Ignore npm modules
+/node_modules/
+
+# Ignore others
+/.awcache/
+/.vscode/
