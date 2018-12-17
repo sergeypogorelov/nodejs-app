@@ -1,6 +1,6 @@
 import fs from 'fs';
-import events from 'events';
 import * as pathHelper from 'path';
+import { EventEmitter } from 'events';
 
 export const EVENT_NAME = 'dirwatcher:changed';
 export const EVENT_ERROR_NAME = 'dirwatcher:error';
@@ -12,9 +12,12 @@ export const TYPE_REMOVED = 'removed';
 export class DirWatcher {
 
     constructor() {
-        this._eventEmitter = new events.EventEmitter();
+        this._eventEmitter = new EventEmitter();
     }
 
+    /**
+     * @returns {EventEmitter}
+     */
     getEventEmitter() {
         return this._eventEmitter;
     }
@@ -23,7 +26,7 @@ export class DirWatcher {
      * @param {string} path the path to watch
      * @param {number} delay updates delay
      */
-    watch(path, delay = 5000) {
+    watch(path, delay = 50) {
 
         if (!path)
             throw new Error('Path is not specified.');
@@ -85,7 +88,7 @@ export class DirWatcher {
             for (let filePath in this._filesTimestamps) {
                 if (pathes.indexOf(filePath) === -1) {
                     delete this._filesTimestamps[filePath];
-                    this._eventEmitter.emit(EVENT_NAME, { type: TYPE_REMOVED, path: newPath });
+                    this._eventEmitter.emit(EVENT_NAME, { type: TYPE_REMOVED, path: filePath });
                 }
             }
 
