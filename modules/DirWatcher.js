@@ -1,10 +1,23 @@
 import fs from 'fs';
+import events from 'events';
 import * as pathHelper from 'path';
 
-let intervalId;
-let filesTimestamps = {};
-///mtimeMs:
+export const EVENT_NAME = 'dirwatcher:changed';
+export const EVENT_ERROR_NAME = 'dirwatcher:error';
+
+export const TYPE_CHANGED = 'changed';
+export const TYPE_ADDED = 'added';
+export const TYPE_REMOVED = 'removed';
+
 export class DirWatcher {
+
+    constructor() {
+        this._eventEmitter = new events.EventEmitter();
+    }
+
+    getEventEmitter() {
+        return this._eventEmitter;
+    }
 
     /**
      * @param {string} path the path to watch
@@ -18,52 +31,66 @@ export class DirWatcher {
         if (!delay)
             throw new Error('Delay is not specified.')
 
-        if (intervalId) {
-            clearInterval(intervalId);
+        if (this._intervalId) {
+            clearInterval(this._intervalId);
         }
 
-        intervalId = setInterval(() => {
+        this._intervalId = setInterval(() => {
 
-            fs.readdir(path, (err, filenames) => {
+            try {
+                this._update(path);
+            } catch (error) {
+                this._eventEmitter.emit(EVENT_ERROR_NAME, error);
+            }
 
-                if (err)
-                    throw err;
+        }, delay);
+        
+    }
 
-                let pathes = filenames.map(filename => pathHelper.resolve(path, filename));
-                pathes.forEach(newPath => {
+    _intervalId;
+    _eventEmitter;
 
-                    fs.stat(newPath, (err, stats) => {
+    _filesTimestamps = {};
 
-                        if (err)
-                            throw err;
+    _update(path) {
 
-                        let mTime = filesTimestamps[newPath];
-                        if (mTime) {
-                            if (mTime < stats.mtimeMs) {
-                                filesTimestamps[newPath] = stats.mtimeMs;
-                                console.log('Changed', newPath, mTime);
-                            }
-                        } else {
-                            filesTimestamps[newPath] = stats.mtimeMs;
-                            console.log('Added', newPath, stats.mtimeMs);
+        fs.readdir(path, (err, filenames) => {
+
+            if (err)
+                throw err;
+
+            let pathes = filenames.map(filename => pathHelper.resolve(path, filename));
+            pathes.forEach(newPath => {
+
+                fs.stat(newPath, (err, stats) => {
+
+                    if (err)
+                        throw err;
+
+                    let mTime = this._filesTimestamps[newPath];
+                    if (mTime) {
+                        if (mTime < stats.mtimeMs) {
+                            this._filesTimestamps[newPath] = stats.mtimeMs;
+                            this._eventEmitter.emit(EVENT_NAME, { type: TYPE_CHANGED, path: newPath });
                         }
-
-                    });
+                    } else {
+                        this._filesTimestamps[newPath] = stats.mtimeMs;
+                        this._eventEmitter.emit(EVENT_NAME, { type: TYPE_ADDED, path: newPath });
+                    }
 
                 });
 
-                for (let filePath in filesTimestamps) {
-                    if (pathes.indexOf(filePath) === -1) {
-                        delete filesTimestamps[filePath];
-                        console.log('Removed', filePath);
-                    }
-                }
-
             });
 
-        }, delay);
+            for (let filePath in this._filesTimestamps) {
+                if (pathes.indexOf(filePath) === -1) {
+                    delete this._filesTimestamps[filePath];
+                    this._eventEmitter.emit(EVENT_NAME, { type: TYPE_REMOVED, path: newPath });
+                }
+            }
 
-        
+        });
+
     }
 
 }
