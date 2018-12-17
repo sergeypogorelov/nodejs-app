@@ -1,3 +1,4 @@
 {
-    "name": "Node.js Homework Application"
+    "name": "Node.js Homework Application",
+    "pathToWatch": "./data"
 }

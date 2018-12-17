@@ -1,17 +1,17 @@
 import path from 'path';
-import events from 'events';
 
-import * as config from './config/config.dev.json';
-import * as models from './models';
 import { Importer } from './modules/Importer';
 import { DirWatcher, EVENT_NAME, EVENT_ERROR_NAME, TYPE_ADDED, TYPE_CHANGED, TYPE_REMOVED } from './modules/DirWatcher';
+
+import * as config from './config/config.dev.json';
+//import * as models from './models';
 
 const allData = {};
 
 const importer = new Importer();
 const dirWatcher = new DirWatcher();
 
-dirWatcher.watch(path.resolve('./data'));
+dirWatcher.watch(path.resolve(config.pathToWatch));
 
 dirWatcher.getEventEmitter().on(EVENT_NAME, ev => {
 
