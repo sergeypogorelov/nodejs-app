@@ -29,5 +29,9 @@
     "babel-preset-stage-2": "^6.24.1",
     "babel-register": "^6.26.0",
     "nodemon": "^1.18.7"
+  },
+  "dependencies": {
+    "csvtojson": "^2.0.8",
+    "rxjs": "^6.3.3"
   }
 }
