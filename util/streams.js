@@ -1,6 +1,8 @@
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const csvParse = require('csv-parse');
+const through2 = require('through2');
 
 const ACTION_KEY = '--action';
 const ACTION_SHORT_KEY = '-a';
@@ -76,11 +78,28 @@ function getAppParams() {
 }
 
 function reverse(appParams) {
-    throw Error('Not implemented.');
+    process.stdin
+        .pipe(through2(function (chunk, enc, callback) {
+            let str = chunk.toString();
+            let newStr = '';
+            if (str.length) {
+                for (let i = str.length - 1; i >= 0; i--) {
+                    newStr += str[i];
+                }
+            }
+            this.push(newStr);
+            callback();
+        }))
+        .pipe(process.stdout);
 }
 
 function transform(appParams) {
-    throw Error('Not implemented.');
+    process.stdin
+        .pipe(through2(function (chunk, enc, callback) {
+            this.push(chunk.toString().toUpperCase());
+            callback();
+        }))
+        .pipe(process.stdout);
 }
 
 function outputFile(appParams) {
