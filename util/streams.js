@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const csvParse = require('csv-parse');
 
 const ACTION_KEY = '--action';
 const ACTION_SHORT_KEY = '-a';
@@ -94,14 +95,80 @@ function outputFile(appParams) {
 }
 
 function convertFromFile(appParams) {
-    throw Error('Not implemented.');
+    if (appParams.options.file) {
+        let fileName = appParams.options.file.trim();
+        if (fileName) {
+            let fullName = path.resolve(fileName);
+            let readableStream = fs.createReadStream(fullName);
+            getJsonFromReadableStream(readableStream)
+                .then(data => {
+                    process.stdout.write(JSON.stringify(data));
+                })
+                .catch(error => {
+                    throw error;
+                });
+        }
+    }
 }
 
 function convertToFile(appParams) {
-    throw Error('Not implemented.');
+    if (appParams.options.file) {
+        let fileName = appParams.options.file.trim();
+        if (fileName) {
+            let fullName = path.resolve(fileName);
+            let readableStream = fs.createReadStream(fullName);
+            getJsonFromReadableStream(readableStream)
+                .then(data => {
+                    let newFullName = path.basename(fullName, path.extname(fullName)) + '.json';
+                    let writableStream = fs.createWriteStream(newFullName);
+                    writableStream.write(JSON.stringify(data));
+                    process.stdout.write('Done.');
+                })
+                .catch(error => {
+                    throw error;
+                });
+        }
+    }
 }
 
 /////
+
+function getJsonFromReadableStream(readableStream) {
+    return new Promise((resolve, reject) => {
+
+        try {
+
+            let properties = null;
+            let data = [];
+
+            let parser = csvParse({
+                delimiter: ','
+            });
+
+            parser.on('data', chunk => {
+                if (properties) {
+                    let obj = {};
+                    for (let i = 0; i < properties.length; i++) {
+                        obj[properties[i]] = chunk[i];
+                    }
+                    data.push(obj);
+                } else {
+                    properties = chunk;
+                }
+            });
+
+            parser.on('finish', () => {
+                resolve(data);
+            });
+
+            readableStream.pipe(parser);
+
+        } catch(e) {
+            reject(e);
+        }
+
+    });
+}
 
 function mapParsedOption(parsedOption) {
     if (typeof parsedOption === 'object') {
