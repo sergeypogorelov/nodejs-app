@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const ACTION_KEY = '--action';
 const ACTION_SHORT_KEY = '-a';
 
@@ -28,7 +31,21 @@ ACTIONS[ACTION_CONVERT_TO_FILE_KEY] = convertToFile;
 
 ///// MAIN START
 
-console.log(getAppParams());
+let appParams = getAppParams();
+if (appParams.helpIsFirstOption || appParams.noOptionsPassed) {
+    console.log('help message');
+} else {
+    let actionName = appParams.options.action;
+    if (actionName && ACTIONS[actionName]) {
+        try {
+            ACTIONS[actionName](appParams);
+        } catch (e) {
+            console.error(e);
+        }
+    } else {
+        console.error('Action \'' + actionName + '\' is not recognised.');
+    }
+}
 
 ///// MAIN END
 
@@ -36,12 +53,13 @@ function getAppParams() {
 
     const args = process.argv.slice(2);
 
-    let noOptionsPassed = !args.length;
     let optionsAsArray = args
         .map(i => parseOption(i))
-        .map(i => mapParsedOption(i));
+        .map(i => mapParsedOption(i))
+        .filter(i => i);
 
     let helpIsFirstOption = null;
+    let noOptionsPassed = !optionsAsArray.length;
     if (optionsAsArray.length) {
         helpIsFirstOption = optionsAsArray[0].key === 'help';
     }
@@ -56,23 +74,30 @@ function getAppParams() {
     };
 }
 
-function reverse(str) {
+function reverse(appParams) {
     throw Error('Not implemented.');
 }
 
-function transform(str) {
+function transform(appParams) {
     throw Error('Not implemented.');
 }
 
-function outputFile(filePath) {
+function outputFile(appParams) {
+    if (appParams.options.file) {
+        let fileName = appParams.options.file.trim();
+        if (fileName) {
+            let fullName = path.resolve(fileName);
+            let readStream = fs.createReadStream(fullName);
+            readStream.pipe(process.stdout);
+        }
+    }
+}
+
+function convertFromFile(appParams) {
     throw Error('Not implemented.');
 }
 
-function convertFromFile(filePath) {
-    throw Error('Not implemented.');
-}
-
-function convertToFile(filePath) {
+function convertToFile(appParams) {
     throw Error('Not implemented.');
 }
 
