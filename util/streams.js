@@ -35,47 +35,26 @@ ACTIONS[ACTION_CONVERT_TO_FILE_KEY] = convertToFile;
 ///// MAIN START
 
 let appParams = getAppParams();
-if (appParams.helpIsFirstOption || appParams.noOptionsPassed) {
-    console.log('help message');
+if (appParams.helpIsFirstOption) {
+    console.log(genHelpMsg());
+} else if (appParams.noOptionsPassed) {
+    console.log(genMsgIfNoOptionsPassed());
+    console.log(genHelpMsg());
 } else {
     let actionName = appParams.options.action;
-    if (actionName && ACTIONS[actionName]) {
-        try {
-            ACTIONS[actionName](appParams);
-        } catch (e) {
-            console.error(e);
+    if (actionName) {
+        if (ACTIONS[actionName]) {
+            ACTIONS[actionName](appParams, error => console.error(error.message));
+        } else {
+            console.error(genMsgIfActionIsNotRecognised(actionName));
+            console.log(genMsgAboutSupportedActions());
         }
     } else {
-        console.error('Action \'' + actionName + '\' is not recognised.');
+        console.error(genMsgIfActionIsNotSpecified());
     }
 }
 
 ///// MAIN END
-
-function getAppParams() {
-
-    const args = process.argv.slice(2);
-
-    let optionsAsArray = args
-        .map(i => parseOption(i))
-        .map(i => mapParsedOption(i))
-        .filter(i => i);
-
-    let helpIsFirstOption = null;
-    let noOptionsPassed = !optionsAsArray.length;
-    if (optionsAsArray.length) {
-        helpIsFirstOption = optionsAsArray[0].key === 'help';
-    }
-
-    let options = {};
-    optionsAsArray.forEach(i => options[i.key] = i.value);
-
-    return {
-        options: options,
-        noOptionsPassed: noOptionsPassed,
-        helpIsFirstOption: helpIsFirstOption
-    };
-}
 
 function reverse(appParams) {
     process.stdin
@@ -102,22 +81,32 @@ function transform(appParams) {
         .pipe(process.stdout);
 }
 
-function outputFile(appParams) {
-    if (appParams.options.file) {
-        let fileName = appParams.options.file.trim();
-        if (fileName) {
-            let fullName = path.resolve(fileName);
-            let readStream = fs.createReadStream(fullName);
-            readStream.pipe(process.stdout);
-        }
+function outputFile(appParams, errorCallback) {
+    let fileName = appParams.options.file;
+    if (fileName) {
+        let fullName = path.resolve(fileName);
+        fs.access(fullName, fs.F_OK & fs.R_OK, err => {
+            if (err) {
+                errorCallback(new Error(genMsgIfFileIsNotAccessible(fullName)));
+                return;
+            }
+            let readableStream = fs.createReadStream(fullName);
+            readableStream.pipe(process.stdout);
+        });
+    } else {
+        errorCallback(new Error(genMsgIfFileIsNotSpecified()));
     }
 }
 
-function convertFromFile(appParams) {
-    if (appParams.options.file) {
-        let fileName = appParams.options.file.trim();
-        if (fileName) {
-            let fullName = path.resolve(fileName);
+function convertFromFile(appParams, errorCallback) {
+    let fileName = appParams.options.file;
+    if (fileName) {
+        let fullName = path.resolve(fileName);
+        fs.access(fullName, fs.F_OK & fs.R_OK, err => {
+            if (err) {
+                errorCallback(new Error(genMsgIfFileIsNotAccessible(fullName)));
+                return;
+            }
             let readableStream = fs.createReadStream(fullName);
             getJsonFromReadableStream(readableStream)
                 .then(data => {
@@ -126,31 +115,64 @@ function convertFromFile(appParams) {
                 .catch(error => {
                     throw error;
                 });
-        }
+        });
+    } else {
+        errorCallback(new Error(genMsgIfFileIsNotSpecified()));
     }
 }
 
-function convertToFile(appParams) {
-    if (appParams.options.file) {
-        let fileName = appParams.options.file.trim();
-        if (fileName) {
-            let fullName = path.resolve(fileName);
+function convertToFile(appParams, errorCallback) {
+    let fileName = appParams.options.file;
+    if (fileName) {
+        let fullName = path.resolve(fileName);
+        fs.access(fullName, fs.F_OK & fs.R_OK, err => {
+            if (err) {
+                errorCallback(new Error(genMsgIfFileIsNotAccessible(fullName)));
+                return;
+            }
             let readableStream = fs.createReadStream(fullName);
             getJsonFromReadableStream(readableStream)
                 .then(data => {
-                    let newFullName = path.basename(fullName, path.extname(fullName)) + '.json';
+                    let newFileName = path.basename(fullName, path.extname(fullName)) + '.json';
+                    let newFullName = path.resolve(path.dirname(fullName), newFileName);
                     let writableStream = fs.createWriteStream(newFullName);
                     writableStream.write(JSON.stringify(data));
-                    process.stdout.write('Done.');
                 })
                 .catch(error => {
                     throw error;
                 });
-        }
+        });
+    } else {
+        errorCallback(new Error(genMsgIfFileIsNotSpecified()));
     }
 }
 
 /////
+
+function getAppParams() {
+
+    const args = process.argv.slice(2);
+
+    let optionsAsArray = args
+        .map(i => parseOption(i))
+        .map(i => mapParsedOption(i))
+        .filter(i => i);
+
+    let helpIsFirstOption = null;
+    let noOptionsPassed = !optionsAsArray.length;
+    if (optionsAsArray.length) {
+        helpIsFirstOption = optionsAsArray[0].key === 'help';
+    }
+
+    let options = {};
+    optionsAsArray.forEach(i => options[i.key] = i.value);
+
+    return {
+        options: options,
+        noOptionsPassed: noOptionsPassed,
+        helpIsFirstOption: helpIsFirstOption
+    };
+}
 
 function getJsonFromReadableStream(readableStream) {
     return new Promise((resolve, reject) => {
@@ -216,4 +238,46 @@ function parseOption(optionStr) {
         }
     }
     return result;
+}
+
+function genHelpMsg() {
+    return [
+        'The following commands are supported:',
+        [OPTIONS_DICTIONARY.action.join(', '), 'Action to do.'].join(' - '),
+        [OPTIONS_DICTIONARY.file.join(', '), 'File to work with (optional).'].join(' - '),
+        [OPTIONS_DICTIONARY.help.join(', '), 'Review of the module.'].join(' - ')
+    ].join(os.EOL);
+}
+
+function genMsgAboutSupportedActions() {
+    return [
+        'The following actions are supported:',
+        [ACTION_REVERSE_KEY, 'Reverse string data from process.stdin to process.stdout.'].join(' - '),
+        [ACTION_TRANSFORM_KEY, 'Convert data from process.stdin to upper-cased data on process.stdout.'].join(' - '),
+        [ACTION_OUTPUT_FILE_KEY, 'Pipe the specified file to process.stdout.'].join(' - '),
+        [ACTION_CONVERT_FROM_FILE_KEY, 'Convert the specified file from .csv to .json and print.'].join(' - '),
+        [ACTION_CONVERT_TO_FILE_KEY, 'Convert the specified file from .csv to .json and save as .json.'].join(' - '),
+    ].join(os.EOL);
+}
+
+function genMsgIfNoOptionsPassed() {
+    return 'No supported options passed.';
+}
+
+function genMsgIfActionIsNotSpecified() {
+    return 'Action is not specified.';
+}
+
+function genMsgIfActionIsNotRecognised(actionName) {
+    if (!actionName)
+        throw new Error('Action name is not specified.');
+    return 'Action \'' + actionName + '\' is not recognised.';
+}
+
+function genMsgIfFileIsNotSpecified() {
+    return 'File is not specified.';
+}
+
+function genMsgIfFileIsNotAccessible(fullName) {
+    return 'File \'' + fullName + '\' is not accessible.';
 }
