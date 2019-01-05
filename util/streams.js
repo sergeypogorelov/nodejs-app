@@ -151,16 +151,25 @@ function convertToFile(appParams, errorCallback) {
 
 function getAppParams() {
 
-    const args = process.argv.slice(2);
-
-    let optionsAsArray = args
-        .map(i => parseOption(i))
-        .map(i => mapParsedOption(i))
-        .filter(i => i);
-
     let helpIsFirstOption = null;
+    let optionsAsArray = [];
+
+    const args = process.argv.slice(2);
+    for (let i = 0; i < args.length; i++) {
+        let currentItem = args[i];
+        if (currentItem.startsWith('--')) {
+            optionsAsArray.push(mapParsedOption(parseOption(currentItem)));
+        } else if (currentItem.startsWith('-')) {
+            let nextItem = args[i + 1];
+            optionsAsArray.push(mapParsedOption(parseShortOption(currentItem, nextItem)));
+            i++;
+        }
+    }
+
+    optionsAsArray = optionsAsArray.filter(i => i);
+
     let noOptionsPassed = !optionsAsArray.length;
-    if (optionsAsArray.length) {
+    if (!noOptionsPassed) {
         helpIsFirstOption = optionsAsArray[0].key === 'help';
     }
 
@@ -238,6 +247,16 @@ function parseOption(optionStr) {
         }
     }
     return result;
+}
+
+function parseShortOption(key, value) {
+    if (!key)
+        return null;
+
+    return {
+        key: key,
+        value: typeof value !== 'undefined' ? value : null
+    };
 }
 
 function genHelpMsg() {
