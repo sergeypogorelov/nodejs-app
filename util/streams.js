@@ -10,12 +10,16 @@ const ACTION_SHORT_KEY = '-a';
 const FILE_KEY = '--file';
 const FILE_SHORT_KEY = '-f';
 
+const PATH_KEY = '--path';
+const PATH_SHORT_KEY = '-p';
+
 const HELP_KEY = '--help';
 const HELP_SHORT_KEY = '-h';
 
 const OPTIONS_DICTIONARY = {
     action: [ACTION_KEY, ACTION_SHORT_KEY],
     file: [FILE_KEY, FILE_SHORT_KEY],
+    path: [PATH_KEY, PATH_SHORT_KEY],
     help: [HELP_KEY, HELP_SHORT_KEY]
 };
 
@@ -24,6 +28,7 @@ const ACTION_TRANSFORM_KEY = 'transform';
 const ACTION_OUTPUT_FILE_KEY = 'outputFile';
 const ACTION_CONVERT_FROM_FILE_KEY = 'convertFromFile';
 const ACTION_CONVERT_TO_FILE_KEY = 'convertToFile';
+const ACTION_CSS_BUNDLER = 'cssBundler';
 
 const ACTIONS = { };
 ACTIONS[ACTION_REVERSE_KEY] = reverse;
@@ -31,6 +36,10 @@ ACTIONS[ACTION_TRANSFORM_KEY] = transform;
 ACTIONS[ACTION_OUTPUT_FILE_KEY] = outputFile;
 ACTIONS[ACTION_CONVERT_FROM_FILE_KEY] = convertFromFile;
 ACTIONS[ACTION_CONVERT_TO_FILE_KEY] = convertToFile;
+ACTIONS[ACTION_CSS_BUNDLER] = cssBundler;
+
+const BUNDLE_FILENAME = 'bundle.css';
+const BUNDLE_END_FILENAME = '../styles/common/end.css';
 
 ///// MAIN START
 
@@ -139,11 +148,55 @@ function convertToFile(appParams, errorCallback) {
                     writableStream.write(JSON.stringify(data));
                 })
                 .catch(error => {
-                    throw error;
+                    errorCallback(error);
                 });
         });
     } else {
         errorCallback(new Error(genMsgIfFileIsNotSpecified()));
+    }
+}
+
+function cssBundler(appParams, errorCallback) {
+    let specifiedPath = appParams.options.path;
+    if (specifiedPath) {
+        let fullPath = path.resolve(specifiedPath);
+        fs.readdir(fullPath, (err, filenames) => {
+            if (err) {
+                errorCallback(err);
+                return;
+            }
+            filenames = filenames.filter(filename => {
+                let newFullName = path.resolve(fullPath, filename);
+                return path.extname(newFullName) === '.css' && filename !== BUNDLE_FILENAME;
+            });
+            let bundleFullName = path.resolve(fullPath, BUNDLE_FILENAME);
+            let writer = new fs.createWriteStream(bundleFullName);
+            if (writer.writable) {
+                for (let i = 0; i < filenames.length; i++) {
+                    let filename = filenames[i];
+                    let fileFullName = path.resolve(fullPath, filename);
+                    let reader = fs.createReadStream(fileFullName);
+                    if (reader.readable) {
+                        reader.pipe(writer);
+                    } else {
+                        errorCallback(new Error(genMsgIfFileIsNotAccessible(fileFullName)));
+                        return;
+                    }
+                }
+                let endFullName = path.resolve(BUNDLE_END_FILENAME);
+                let reader = fs.createReadStream(endFullName);
+                if (reader.readable) {
+                    reader.pipe(writer);
+                } else {
+                    errorCallback(new Error(genMsgIfFileIsNotAccessible(endFullName)));
+                }
+            } else {
+                errorCallback(new Error(genMsgIfFileIsNotAccessible(bundleFullName)));
+            }
+
+        });
+    } else {
+        errorCallback(new Error(genMsgIfPathIsNotSpecified()));
     }
 }
 
@@ -264,6 +317,7 @@ function genHelpMsg() {
         'The following commands are supported:',
         [OPTIONS_DICTIONARY.action.join(', '), 'Action to do.'].join(' - '),
         [OPTIONS_DICTIONARY.file.join(', '), 'File to work with (optional).'].join(' - '),
+        [OPTIONS_DICTIONARY.path.join(', '), 'Path to work with.'].join(' - '),
         [OPTIONS_DICTIONARY.help.join(', '), 'Review of the module.'].join(' - ')
     ].join(os.EOL);
 }
@@ -276,6 +330,7 @@ function genMsgAboutSupportedActions() {
         [ACTION_OUTPUT_FILE_KEY, 'Pipe the specified file to process.stdout.'].join(' - '),
         [ACTION_CONVERT_FROM_FILE_KEY, 'Convert the specified file from .csv to .json and print.'].join(' - '),
         [ACTION_CONVERT_TO_FILE_KEY, 'Convert the specified file from .csv to .json and save as .json.'].join(' - '),
+        [ACTION_CSS_BUNDLER, 'Bundle all .css files from the specified path.'].join(' - ')
     ].join(os.EOL);
 }
 
@@ -295,6 +350,10 @@ function genMsgIfActionIsNotRecognised(actionName) {
 
 function genMsgIfFileIsNotSpecified() {
     return 'File is not specified.';
+}
+
+function genMsgIfPathIsNotSpecified() {
+    return 'Path is not specified.';
 }
 
 function genMsgIfFileIsNotAccessible(fullName) {
