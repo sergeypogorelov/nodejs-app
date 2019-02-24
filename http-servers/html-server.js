@@ -10,10 +10,13 @@ const MESSAGE = 'Hello World!!!';
 const MESSAGE_PLACEHOLDER = '{message}';
 
 server.on('request', (req, res) => {
+    req.on('error', error => console.error(error));
+    res.on('error', error => console.error(error));
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
     const reader = fs.createReadStream(path.resolve(TEMPLATE_FILENAME));
+    reader.on('error', error => console.error(error));
     reader.on('data', chunk => {
         let str = chunk.toString();
         if (str.indexOf(MESSAGE_PLACEHOLDER) !== -1) {

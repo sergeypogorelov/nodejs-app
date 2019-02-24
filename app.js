@@ -19,4 +19,6 @@ app.use('/api/users', routes.usersRouter);
 //     next();
 // });
 
+app.use(middlewares.errorHandlerMiddleware());
+
 export default app;
