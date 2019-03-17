@@ -1,4 +1,5 @@
 {
     "name": "Node.js Homework Application",
-    "pathToWatch": "./data"
+    "pathToWatch": "./data",
+    "privateKey": "private_key"
 }

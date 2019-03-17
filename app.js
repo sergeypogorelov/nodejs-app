@@ -10,8 +10,9 @@ app.use(cookieParser());
 app.use(middlewares.cookieParserMiddleware());
 app.use(middlewares.queryParserMiddleware());
 
-app.use('/api/products', routes.productsRouter);
-app.use('/api/users', routes.usersRouter);
+app.use('/auth', routes.authRouter);
+app.use('/api/products', middlewares.tokenCheckerMiddleware(), routes.productsRouter);
+app.use('/api/users', middlewares.tokenCheckerMiddleware(), routes.usersRouter);
 
 // app.get('/test-middlewares', (req, res, next) => {
 //     const { parsedCookies, parsedQuery } = req;
