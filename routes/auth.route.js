@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as passportLocal from 'passport-local';
 import * as jwt from 'jsonwebtoken';
 
 import * as cfg from '../config/config.dev';
@@ -6,29 +7,51 @@ import * as cfg from '../config/config.dev';
 const USER_NAME = 'admin';
 const USER_PASS = 'admin';
 
-const router = express.Router();
+export function generateAuthRouter(passport) {
 
-router.use(express.json());
-
-router.post('/', (req, res, next) => {
-    const { username, password } = req.body || {};
-    let code = 200;
-    if (username === USER_NAME) {
-        if (password === USER_PASS) {
-            let payload = { sub: username };
-            let token = jwt.sign(payload, cfg.privateKey);
-            res.status(code).send(generateResponseOnSuccess(username, token));
-            return;
-        } else {
-            code = 403;
+    passport.use(new passportLocal.Strategy(
+        {
+            usernameField: 'username',
+            passwordField: 'password'
+        },
+        (username, password, cb) => {
+            if (username === USER_NAME) {
+                if (password === USER_PASS) {
+                    cb(null, { username });
+                } else {
+                    cb(403, null);
+                }
+            } else {
+                cb(404, null);
+            }
         }
-    } else {
-        code = 404;
-    }
-    res.status(code).send(generateResponseOnError(code));
-});
+    ));
 
-export const authRouter = router;
+    const router = express.Router();
+
+    router.use('/', (req, res, next) => {
+        passport.authenticate('local', (err, user, info) => {
+            if (err) {
+                if (typeof err === 'number') {
+                    res.status(err).send(generateResponseOnError(err));
+                } else {
+                    next(err);
+                }
+            } else {
+                if (user) {
+                    let payload = { sub: user.username };
+                    let token = jwt.sign(payload, cfg.privateKey);
+                    res.status(200).send(generateResponseOnSuccess(user.username, token));
+                } else {
+                    let code = 403;
+                    res.status(code).send(generateResponseOnError(code));
+                }   
+            }
+        })(req, res, next);
+    });
+
+    return router;
+};
 
 /////
 
