@@ -8,14 +8,15 @@ export function tokenCheckerMiddleware() {
         if (token) {
             jwt.verify(token, cfg.privateKey, (err, decoded) => {
                 if (err) {
-                    console.log(err);
+                    console.error('Cannot authenticate.', err);
+                    next(err);
                 } else {
-                    console.log(decoded);
+                    console.log('Authenticated as', decoded);
                     next();
-                    return;
                 }
             });
+        } else {
+            return res.status(403).send('403 Forbidden');
         }
-        res.status(403).send('403 Forbidden');
     };
 }

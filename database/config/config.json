@@ -1,21 +1,21 @@
 {
   "development": {
-    "username": "postgres",
-    "password": null,
+    "username": "root",
+    "password": "root",
     "database": "node-js-db",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
   "test": {
-    "username": "postgres",
-    "password": null,
+    "username": "root",
+    "password": "root",
     "database": "node-js-db",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
   "production": {
-    "username": "postgres",
-    "password": null,
+    "username": "root",
+    "password": "root",
     "database": "node-js-db",
     "host": "127.0.0.1",
     "dialect": "postgres"
