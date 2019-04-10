@@ -29,7 +29,7 @@ sequelize
         app.use('/api/products', middlewares.tokenCheckerMiddleware(), routes.productsRouter(sequelize));
         app.use('/api/users', middlewares.tokenCheckerMiddleware(), routes.usersRouter(sequelize));
 
-        //app.use(middlewares.errorHandlerMiddleware());
+        app.use(middlewares.errorHandlerMiddleware());
     })
     .catch(err => console.error(err));
 
