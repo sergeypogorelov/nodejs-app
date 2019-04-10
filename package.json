@@ -37,6 +37,10 @@
     "jsonwebtoken": "^8.5.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
+    "pg": "^7.9.0",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^5.2.12",
+    "sequelize-cli": "^5.4.0",
     "through2": "^3.0.0"
   }
 }

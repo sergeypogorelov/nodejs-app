@@ -1,9 +1,22 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
+import { Sequelize } from 'sequelize';
 
 import * as middlewares from './middlewares';
 import * as routes from './routes';
+
+const sequelize = new Sequelize('node-js-db', 'postgres', null, {
+    host: 'localhost',
+    dialect: 'postgres'
+});
+sequelize
+    .authenticate()
+    .then(() => {
+        console.log('DB OK');
+        sequelize.close();
+    })
+    .catch(err => console.error(err));
 
 const app = express();
 const authRouter = routes.generateAuthRouter(passport);
