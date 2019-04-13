@@ -3,7 +3,15 @@ const mongodb = require('mongodb');
 
 const cities = require('./cities.json');
 
-const url = 'mongodb://localhost:27017/';
+const DB_HOST = 'localhost';
+const DB_PORT = 27017;
+const DB_NAME = 'node-js-app';
+const DB_COLLECTION = 'cities';
+
+const HOST = 'localhost';
+const PORT = 1234;
+
+const url = `mongodb://${DB_HOST}:${DB_PORT}/`;
 const MongoClient = mongodb.MongoClient;
 MongoClient.connect(url, { }, (err, db) => {
 
@@ -12,8 +20,8 @@ MongoClient.connect(url, { }, (err, db) => {
         return;
     }
 
-    const dbo = db.db('node-js-app');
-    const collection = dbo.collection('cities');
+    const dbo = db.db(DB_NAME);
+    const collection = dbo.collection(DB_COLLECTION);
 
     /// first, remove all data in the collection
     collection.remove({ })
@@ -48,14 +56,14 @@ MongoClient.connect(url, { }, (err, db) => {
                                     .skip(itemsToSkip)
                                     .limit(1)
                                     .toArray()
-                                    .then(items => res.end(JSON.stringify(items)))
+                                    .then(items => res.end(JSON.stringify(items[0])))
                                     .catch(error => console.error(error));
 
                             });
 
                             server.on('error', err => console.error(err));
 
-                            server.listen(1234, 'localhost');
+                            server.listen(PORT, HOST, () => console.log(`App is listening on http://${HOST}:${PORT}.`));
 
                         })
                         .catch(error => console.error(error));
