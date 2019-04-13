@@ -1,7 +1,7 @@
 const http = require('http');
 const mongodb = require('mongodb');
 
-const cities = require('./cities.json');
+const cities = require('../data/cities.json');
 
 const DB_HOST = 'localhost';
 const DB_PORT = 27017;
