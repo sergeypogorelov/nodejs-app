@@ -1,10 +1,20 @@
 [
     {
         "name": "Saratov",
-        "country": "RU"
+        "country": "RU",
+        "capital": false,
+        "location": {
+            "lat": 52.097621,
+            "long": 23.734050
+        }
     },
     {
         "name": "Krasnodar",
-        "country": "RU"
+        "country": "RU",
+        "capital": false,
+        "location": {
+            "lat": 55.097621,
+            "long": 26.734050
+        }
     }
 ]
