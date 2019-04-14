@@ -26,6 +26,7 @@ paths:
             tags:
                 - authentication
             parameters:
+                # there is no way to add examples here in OAS 2
                 -   in: query
                     name: username
                     type: string
