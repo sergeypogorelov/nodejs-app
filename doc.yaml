@@ -1,0 +1,205 @@
+swagger: '2.0'
+info:
+    version: 1.0.0
+    title: Simple NodeJS App
+    description: Simple NodeJS App
+host: localhost:8080
+basePath: /api
+schemes: 
+    - http
+securityDefinitions:
+    Bearer:
+        name: x-access-token
+        type: apiKey
+        in: header
+tags:
+    -   name: authentication
+        description: Authentication on NodeJS App
+    -   name: users
+        description: Everything about the users of NodeJS App
+    -   name: products
+        description: Everything about the products of NodeJS App
+paths:
+    /auth:
+        get:
+            summary: Authenticates and provides with JWT token
+            tags:
+                - authentication
+            parameters:
+                -   in: query
+                    name: username
+                    type: string
+                    required: true
+                    description: A user login to authenticate (admin)
+                -   in: query
+                    name: password
+                    type: string
+                    required: true
+                    description: A user password to authenticate (admin)
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/AuthSuccess'
+    /users:
+        get:
+            summary: Returns all users
+            tags:
+                - users
+            security:
+                - Bearer: []
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/UserList'
+    /products:
+        get:
+            summary: Returns all products
+            tags:
+                - products
+            security:
+                - Bearer: []
+            produces: 
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/ProductList'
+        post:
+            summary: Adds a new product and returns it
+            tags:
+                - products
+            security:
+                - Bearer: []
+            parameters:
+                -   name: product
+                    in: body
+                    description: The product to add
+                    schema:
+                        $ref: '#/definitions/Product'
+            consumes:
+                - application/json
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Product'
+    /products/{productId}:
+        get:
+            summary: Returns a single product by id
+            tags:
+                - products
+            security:
+                - Bearer: []
+            parameters:
+                -   name: productId
+                    in: path
+                    required: true
+                    type: integer
+                    minimum: 1
+                    description: Product id
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Product'
+    /products/{productId}/reviews:
+        get:
+            summary: Returns all reviews for a single product
+            tags:
+                - products
+            security:
+                - Bearer: []
+            parameters:
+                -   name: productId
+                    in: path
+                    required: true
+                    type: integer
+                    minimum: 1
+                    description: Product id
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/ReviewList'
+definitions:
+    AuthSuccess:
+        properties:
+            code:
+                type: integer
+                example: 200
+            message:
+                type: string
+                example: OK
+            token:
+                type: string
+                example: XXX.XXX.XXX
+            data:
+                type: object
+                properties:
+                    user:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                example:
+                    user:
+                        username: admin
+    User:
+        properties:
+            id:
+                type: integer
+                example: 1
+            name:
+                type: string
+                example: admin
+            createdAt:
+                type: string
+                example: '1970-01-01 00:20:34.567+00'
+            updatedAt:
+                type: string
+                example: '1970-01-01 00:20:34.567+00'
+    UserList:
+        type: array
+        items:
+            $ref: '#/definitions/User'
+    Product:
+        properties:
+            id:
+                type: integer
+                example: 1
+            name:
+                type: string
+                example: Product Name 1
+            description:
+                type: string
+                example: Product Description 1
+            createdAt:
+                type: string
+                example: '1970-01-01 00:20:34.567+00'
+            updatedAt:
+                type: string
+                example: '1970-01-01 00:20:34.567+00'
+    ProductList:
+        type: array
+        items:
+            $ref: '#/definitions/Product'
+    ReviewList:
+        type: array
+        items:
+            type: string
+        example:
+            - review 1
+            - review 2

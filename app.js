@@ -25,7 +25,7 @@ sequelize
 
         app.use(passport.initialize());
 
-        app.use('/auth', authRouter);
+        app.use('/api/auth', authRouter);
         app.use('/api/products', middlewares.tokenCheckerMiddleware(), routes.productsRouter(sequelize));
         app.use('/api/users', middlewares.tokenCheckerMiddleware(), routes.usersRouter(sequelize));
 
