@@ -40,9 +40,21 @@ paths:
                 - application/json
             responses:
                 200:
-                    description: OK
+                    description: User is authenticated successfully
                     schema:
                         $ref: '#/definitions/AuthSuccess'
+                404:
+                    description: User is not found
+                    schema:
+                        $ref: '#/definitions/AuthUserNotFound'
+                403:
+                    description: Password is incorrect
+                    schema:
+                        $ref: '#/definitions/AuthIncorrectPassword'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
     /users:
         get:
             summary: Returns all users
@@ -57,6 +69,14 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/UserList'
+                403:
+                    description: Forbidden
+                    schema:
+                        $ref: '#/definitions/Common403'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
     /products:
         get:
             summary: Returns all products
@@ -71,6 +91,14 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/ProductList'
+                403:
+                    description: Forbidden
+                    schema:
+                        $ref: '#/definitions/Common403'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
         post:
             summary: Adds a new product and returns it
             tags:
@@ -92,6 +120,18 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/Product'
+                400:
+                    description: Product data is invalid
+                    schema:
+                        $ref: '#/definitions/ProductInvalid'
+                403:
+                    description: Forbidden
+                    schema:
+                        $ref: '#/definitions/Common403'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
     /products/{productId}:
         get:
             summary: Returns a single product by id
@@ -113,6 +153,18 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/Product'
+                404:
+                    description: Product is not found
+                    schema:
+                        $ref: '#/definitions/Common404'
+                403:
+                    description: Forbidden
+                    schema:
+                        $ref: '#/definitions/Common403'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
     /products/{productId}/reviews:
         get:
             summary: Returns all reviews for a single product
@@ -134,7 +186,43 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/ReviewList'
+                404:
+                    description: Product is not found
+                    schema:
+                        $ref: '#/definitions/Common404'
+                403:
+                    description: Forbidden
+                    schema:
+                        $ref: '#/definitions/Common403'
+                500:
+                    description: Internal Server Error
+                    schema:
+                        $ref: '#/definitions/Common500'
 definitions:
+    Common403:
+        properties:
+            code:
+                type: integer
+                example: 403
+            message:
+                type: string
+                example: Forbidden
+    Common404:
+        properties:
+            code:
+                type: integer
+                example: 404
+            message:
+                type: string
+                example: Not Found
+    Common500:
+        properties:
+            code:
+                type: integer
+                example: 500
+            message:
+                type: string
+                example: Internal Server Error
     AuthSuccess:
         properties:
             code:
@@ -157,6 +245,22 @@ definitions:
                 example:
                     user:
                         username: admin
+    AuthUserNotFound:
+        properties:
+            code:
+                type: integer
+                example: 404
+            message:
+                type: string
+                example: Not Found
+    AuthIncorrectPassword:
+        properties:
+            code:
+                type: integer
+                example: 403
+            message:
+                type: string
+                example: Forbidden
     User:
         properties:
             id:
@@ -171,6 +275,14 @@ definitions:
             updatedAt:
                 type: string
                 example: '1970-01-01 00:20:34.567+00'
+    ProductInvalid:
+        properties:
+            code:
+                type: integer
+                example: 400
+            message:
+                type: string
+                example: Bad Request
     UserList:
         type: array
         items:

@@ -16,7 +16,10 @@ export function tokenCheckerMiddleware() {
                 }
             });
         } else {
-            return res.status(403).send('403 Forbidden');
+            return res.status(403).send({
+                status: 403,
+                message: '403 Forbidden'
+            });
         }
     };
 }

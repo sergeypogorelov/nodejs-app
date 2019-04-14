@@ -66,7 +66,10 @@ const initializer = (sequelize) => {
         if (req.product) {
             return res.status(200).json(req.product);
         } else {
-            return res.status(404).send();
+            return res.status(404).send({
+                code: 404,
+                message: 'Not Found'
+            });
         }
     });
     
@@ -74,7 +77,10 @@ const initializer = (sequelize) => {
         if (req.product) {
             return res.status(200).json([]); /// there is no info about the reviews in the task 6
         } else {
-            return res.status(404).send();
+            return res.status(404).send({
+                code: 404,
+                message: 'Not Found'
+            });
         }
     });
     
@@ -105,7 +111,10 @@ const initializer = (sequelize) => {
                     next(err);
                 });
         } else {
-            return res.status(400).send();
+            return res.status(400).send({
+                code: 400,
+                message: 'Bad Request'
+            });
         }
     });
 
